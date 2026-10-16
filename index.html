@@ -101,11 +101,25 @@
   .secondary { background: transparent; color: var(--accent); }
   #status { margin-top: 12px; color: var(--muted); min-height: 1.5em; }
 
+  .done { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 18px; }
+  .done h2 { margin: 0 0 4px; font-size: 1.25rem; }
+  .done h2:focus { outline: none; }
+  .done p { margin: 0; color: var(--muted); }
+  .sheet-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .sheet-head span { color: var(--muted); font-size: .9rem; }
+  .sheet-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+  .sheet { border-collapse: collapse; font-size: .85rem; white-space: nowrap; }
+  .sheet th, .sheet td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
+  .sheet thead th { background: var(--accent-soft); color: var(--accent); font-weight: 600; position: sticky; top: 0; }
+  .sheet .rownum { background: var(--bg); color: var(--muted); text-align: center; min-width: 2.5em; }
+  .sheet tr.latest td { background: var(--note-bg); }
+  .pitch { margin-top: 16px; font-size: .95rem; }
+
   @media print {
     :root { --bg: #fff; --card: #fff; --text: #000; --line: #999; --accent: #000; --accent-soft: #fff; }
     body { font-size: 11pt; }
     main { padding: 0; max-width: none; }
-    .demo-note, .actions, #status, .toggle { display: none; }
+    .demo-note, .actions, #status, .toggle, #results { display: none; }
     fieldset { break-inside: avoid; border-color: #999; padding: 8px 12px 10px; margin-bottom: 10px; }
     legend { padding: 0 6px; }
     input, select, textarea { border: none; border-bottom: 1px solid #999; border-radius: 0; padding: 2px 4px; }
@@ -122,12 +136,12 @@
   </header>
 
   <div class="demo-note" role="note">
-    <strong>Demo prototype.</strong> This page doesn't send your answers anywhere. They stay in your browser, and you can print or save them as a PDF. Please don't enter real Social Security numbers or other personal details here.
+    <strong>Demo prototype.</strong> This page doesn't send your answers anywhere. When you hit Submit, you'll see how they would land in a spreadsheet, and you can download that spreadsheet. Please don't enter real Social Security numbers or other personal details here.
   </div>
 
   <form id="quote-form" novalidate>
     <!-- Applicant -->
-    <fieldset>
+    <fieldset data-section="Applicant">
       <legend>Applicant Information</legend>
       <div class="grid">
         <div class="field s8"><label for="app_name">Name</label><input id="app_name" name="app_name" autocomplete="name"></div>
@@ -144,7 +158,7 @@
     </fieldset>
 
     <!-- Co-applicant -->
-    <fieldset>
+    <fieldset data-section="Co-Applicant">
       <legend>Co-Applicant Information (if applicable)</legend>
       <label class="toggle"><input type="checkbox" id="has_coapp" data-reveals="coapp"> There is a co-applicant</label>
       <div id="coapp" hidden>
@@ -164,7 +178,7 @@
     </fieldset>
 
     <!-- Insurance -->
-    <fieldset>
+    <fieldset data-section="Prior Insurance">
       <legend>Current/Prior Insurance Information</legend>
       <div class="grid">
         <div class="field s6"><label for="ins_carrier">Current/Prior Carrier</label><input id="ins_carrier" name="ins_carrier"></div>
@@ -175,7 +189,7 @@
     </fieldset>
 
     <!-- Dwelling -->
-    <fieldset>
+    <fieldset data-section="Dwelling">
       <legend>Dwelling Information</legend>
       <div class="grid">
         <div class="field s6"><label for="dw_address">Address</label><input id="dw_address" name="dw_address" autocomplete="street-address"></div>
@@ -209,7 +223,7 @@
     </fieldset>
 
     <!-- Security -->
-    <fieldset>
+    <fieldset data-section="Security">
       <legend>Security/Safety Features (if applicable)</legend>
       <p class="hint">Documentation may be required.<br>
         Example 1: burglar &amp; fire alarm, monitored by [company name], carbon monoxide detection, sprinkler system<br>
@@ -220,7 +234,7 @@
     </fieldset>
 
     <!-- Pool -->
-    <fieldset>
+    <fieldset data-section="Pool">
       <legend>Pool (if applicable)</legend>
       <label class="toggle"><input type="checkbox" id="has_pool" data-reveals="pool"> The property has a pool</label>
       <div id="pool" hidden>
@@ -243,7 +257,7 @@
     </fieldset>
 
     <!-- Mortgage -->
-    <fieldset>
+    <fieldset data-section="Mortgage">
       <legend>Mortgage/Additional Interest(s) (if applicable)</legend>
       <div class="grid">
         <div class="field"><label for="mtg_name">Mortgagee Name (as appears on loan agreement)</label><input id="mtg_name" name="mtg_name"></div>
@@ -259,7 +273,7 @@
     </fieldset>
 
     <!-- Additional -->
-    <fieldset>
+    <fieldset data-section="Additional">
       <legend>Additional Buildings or Features</legend>
       <p class="hint">Please describe here with dimensions and approximate value.</p>
       <div class="grid">
@@ -268,11 +282,33 @@
     </fieldset>
 
     <div class="actions">
-      <button type="button" class="primary" id="print-btn">Print / Save as PDF</button>
+      <button type="submit" class="primary">Submit</button>
+      <button type="button" class="secondary" id="print-btn">Print / Save as PDF</button>
       <button type="reset" class="secondary">Clear form</button>
     </div>
     <p id="status" aria-live="polite"></p>
   </form>
+
+  <section id="results" hidden aria-labelledby="results-title">
+    <div class="done">
+      <h2 id="results-title" tabindex="-1">Thanks, your quote request is in.</h2>
+      <p>Below is how each submission would land in the agency's spreadsheet: one row per client, one column per question. Nobody has to retype it from a PDF.</p>
+    </div>
+    <div class="sheet-head">
+      <strong>Quote requests</strong>
+      <span id="row-count"></span>
+    </div>
+    <div class="sheet-wrap" tabindex="0" aria-label="Spreadsheet preview, scrolls sideways">
+      <table class="sheet" id="sheet"><thead></thead><tbody></tbody></table>
+    </div>
+    <p class="hint">Scroll sideways to see every column. Social Security numbers are partly hidden in this preview.</p>
+    <div class="actions">
+      <button type="button" class="primary" id="download-btn">Download spreadsheet</button>
+      <button type="button" class="secondary" id="edit-btn">Edit these answers</button>
+      <button type="button" class="secondary" id="new-btn">Start a new quote</button>
+    </div>
+    <p class="pitch">In a live setup, this row would be added automatically to Google Sheets, Excel, or the agency's own system the moment the client hits Submit.</p>
+  </section>
 </main>
 
 <script>
@@ -290,6 +326,125 @@
       if (e.target.matches('[data-reveals]')) syncToggles();
     });
 
+    // ---- Submit -> spreadsheet preview ----
+    // Rows live only in this browser tab's memory; nothing is sent or stored.
+    var results = document.getElementById('results');
+    var sheet = document.getElementById('sheet');
+    var columns = buildColumns();
+    var rows = [];
+    var editingIndex = null;
+    var skipConfirm = false;
+
+    function buildColumns() {
+      var cols = [{ key: '_submitted', label: 'Submitted' }];
+      form.querySelectorAll('fieldset[data-section]').forEach(function (fs) {
+        fs.querySelectorAll('input[name], select[name], textarea[name]').forEach(function (el) {
+          var lab = form.querySelector('label[for="' + el.id + '"]');
+          var text = lab ? lab.textContent : el.getAttribute('aria-label');
+          cols.push({ key: el.name, label: fs.dataset.section + ': ' + text.trim() });
+        });
+      });
+      return cols;
+    }
+
+    function maskSsn(v) {
+      var digits = v.replace(/\D/g, '');
+      return digits.length >= 4 ? '***-**-' + digits.slice(-4) : v;
+    }
+
+    function renderSheet() {
+      var head = '<tr><th class="rownum"></th>' + columns.map(function (c) {
+        return '<th>' + escapeHtml(c.label) + '</th>';
+      }).join('') + '</tr>';
+      var body = rows.map(function (r, i) {
+        return '<tr' + (i === editingIndex ? ' class="latest"' : '') + '><td class="rownum">' + (i + 1) + '</td>' +
+          columns.map(function (c) {
+            var v = r[c.key] || '';
+            if (/_ssn$/.test(c.key)) v = maskSsn(v);
+            return '<td title="' + escapeHtml(v) + '">' + escapeHtml(v) + '</td>';
+          }).join('') + '</tr>';
+      }).join('');
+      sheet.tHead.innerHTML = head;
+      sheet.tBodies[0].innerHTML = body;
+      document.getElementById('row-count').textContent =
+        rows.length + (rows.length === 1 ? ' submission' : ' submissions');
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, function (ch) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+      });
+    }
+
+    function showResults(show) {
+      form.hidden = show;
+      document.querySelector('.demo-note').hidden = show;
+      results.hidden = !show;
+      window.scrollTo(0, 0);
+      if (show) document.getElementById('results-title').focus();
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var invalid = form.querySelector(':invalid');
+      if (invalid) {
+        status.textContent = 'Please check the highlighted field before submitting.';
+        invalid.focus();
+        return;
+      }
+      status.textContent = '';
+      var row = { _submitted: new Date().toLocaleString() };
+      var data = new FormData(form);
+      columns.forEach(function (c) {
+        if (c.key === '_submitted') return;
+        var el = form.elements[c.key];
+        // Skip answers inside a section that was switched off.
+        row[c.key] = el.closest('[hidden]') ? '' : String(data.get(c.key) || '').trim();
+      });
+      if (editingIndex === null) {
+        rows.push(row);
+        editingIndex = rows.length - 1;
+      } else {
+        rows[editingIndex] = row;
+      }
+      renderSheet();
+      showResults(true);
+    });
+
+    document.getElementById('edit-btn').addEventListener('click', function () {
+      showResults(false);
+    });
+
+    document.getElementById('new-btn').addEventListener('click', function () {
+      skipConfirm = true;
+      form.reset();
+      skipConfirm = false;
+      syncToggles();
+      editingIndex = null;
+      status.textContent = '';
+      showResults(false);
+    });
+
+    document.getElementById('download-btn').addEventListener('click', function () {
+      function cell(v) {
+        v = String(v == null ? '' : v);
+        // Stop spreadsheet apps from treating an answer as a formula.
+        if (/^[=+@\t\r-]/.test(v) && !/^-?\d/.test(v)) v = "'" + v;
+        return '"' + v.replace(/"/g, '""') + '"';
+      }
+      var lines = [columns.map(function (c) { return cell(c.label); }).join(',')];
+      rows.forEach(function (r) {
+        lines.push(columns.map(function (c) { return cell(r[c.key]); }).join(','));
+      });
+      var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'homeowners-quote-requests.csv';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    });
+
     document.getElementById('print-btn').addEventListener('click', function () {
       var invalid = form.querySelector(':invalid');
       if (invalid) {
@@ -302,6 +457,7 @@
     });
 
     form.addEventListener('reset', function (e) {
+      if (skipConfirm) return;
       if (!confirm('Clear every answer on this form?')) { e.preventDefault(); return; }
       setTimeout(function () { syncToggles(); status.textContent = 'Form cleared.'; }, 0);
     });
