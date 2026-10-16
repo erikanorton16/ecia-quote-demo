@@ -147,6 +147,9 @@
   .sheet .rownum { background: var(--bg); color: var(--muted); text-align: center; min-width: 2.5em; }
   .sheet tr.latest td { background: var(--note-bg); }
   .pitch { margin: 16px 0 0; font-size: .95rem; }
+  .dl-label { margin: 18px 0 8px; font-weight: 600; font-size: .9rem; }
+  .dl-help { margin-top: 8px; }
+  #dl-status:empty { display: none; }
 
   @media print {
     :root { --bg: #fff; --card: #fff; --text: #000; --line: #999; --accent: #000; --accent-soft: #fff; }
@@ -743,9 +746,14 @@
       <table class="sheet" id="sheet"><thead></thead><tbody></tbody></table>
     </div>
     <p class="hint">Scroll sideways to see every column. Social Security numbers are partly hidden in this preview.</p>
+    <p class="dl-label">Download these submissions</p>
     <div class="actions">
-      <button type="button" class="primary" id="download-btn">Download Excel spreadsheet</button>
+      <button type="button" class="primary" id="dl-xlsx">Excel spreadsheet</button>
+      <button type="button" class="secondary" id="dl-pdf">PDF summary</button>
+      <button type="button" class="secondary" id="dl-csv">CSV file</button>
     </div>
+    <p class="hint dl-help">Excel opens in Excel, Apple Numbers and Google Sheets. The PDF is a printable page for each request and opens on any device. CSV can be imported into most insurance software.</p>
+    <p class="status" id="dl-status" aria-live="polite"></p>
     <p class="pitch">In a live setup, this row would be added automatically to Google Sheets, Excel, or the agency's own system the moment the client hits Submit.</p>
     </div>
   </section>
@@ -764,11 +772,11 @@
     // Each line of business has its own form, columns and rows.
     // Rows live only in this browser tab's memory; nothing is sent or stored.
     var LINES = {
-      home:     { title: 'Get a Home Quote',           sheet: 'Home quote requests',     file: 'ecia-home-quote-requests.xlsx' },
-      auto:     { title: 'Get an Auto Quote',          sheet: 'Auto quote requests',     file: 'ecia-auto-quote-requests.xlsx' },
-      life:     { title: 'Get a Life Insurance Quote', sheet: 'Life quote requests',     file: 'ecia-life-quote-requests.xlsx' },
-      business: { title: 'Get a Business Quote',       sheet: 'Business quote requests', file: 'ecia-business-quote-requests.xlsx' },
-      commercial: { title: 'Get a Commercial Quote',   sheet: 'Commercial quote requests', file: 'ecia-commercial-quote-requests.xlsx' }
+      home:     { title: 'Get a Home Quote',           sheet: 'Home quote requests',     file: 'ecia-home-quote-requests' },
+      auto:     { title: 'Get an Auto Quote',          sheet: 'Auto quote requests',     file: 'ecia-auto-quote-requests' },
+      life:     { title: 'Get a Life Insurance Quote', sheet: 'Life quote requests',     file: 'ecia-life-quote-requests' },
+      business: { title: 'Get a Business Quote',       sheet: 'Business quote requests', file: 'ecia-business-quote-requests' },
+      commercial: { title: 'Get a Commercial Quote',   sheet: 'Commercial quote requests', file: 'ecia-commercial-quote-requests' }
     };
     var results = document.getElementById('results');
     var sheet = document.getElementById('sheet');
@@ -1067,19 +1075,143 @@
       ]);
     }
 
-    document.getElementById('download-btn').addEventListener('click', function () {
-      var line = LINES[current];
-      var header = line.columns.map(function (c) { return c.label; });
-      var rows = line.rows.map(function (r) {
-        return line.columns.map(function (c) { return r[c.key] || ''; });
-      });
-      var blob = buildWorkbook(line.sheet, header, rows);
+    function saveBlob(blob, filename) {
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = line.file;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }
+
+    function tableFor(line) {
+      return {
+        header: line.columns.map(function (c) { return c.label; }),
+        rows: line.rows.map(function (r) {
+          return line.columns.map(function (c) { return r[c.key] || ''; });
+        })
+      };
+    }
+
+    var dlStatus = document.getElementById('dl-status');
+
+    document.getElementById('dl-xlsx').addEventListener('click', function () {
+      var line = LINES[current], t = tableFor(line);
+      saveBlob(buildWorkbook(line.sheet, t.header, t.rows), line.file + '.xlsx');
+    });
+
+    document.getElementById('dl-csv').addEventListener('click', function () {
+      var line = LINES[current], t = tableFor(line);
+      function cell(v) {
+        v = String(v == null ? '' : v);
+        // Stop spreadsheet apps from treating an answer as a formula.
+        if (/^[=+@\t\r-]/.test(v) && !/^-?\d/.test(v)) v = "'" + v;
+        return '"' + v.replace(/"/g, '""') + '"';
+      }
+      var lines = [t.header].concat(t.rows).map(function (r) { return r.map(cell).join(','); });
+      // The leading byte-order mark tells Excel the file is UTF-8.
+      saveBlob(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }), line.file + '.csv');
+    });
+
+    // ---- PDF: one page (or more) per submission, fields grouped by section ----
+    var pdfLib = null;
+    function loadPdfLib(done) {
+      if (window.jspdf) return done();
+      if (pdfLib) return pdfLib.push(done);
+      pdfLib = [done];
+      var sc = document.createElement('script');
+      sc.src = 'vendor/jspdf.umd.min.js';
+      sc.onload = function () { pdfLib.forEach(function (f) { f(); }); pdfLib = null; };
+      sc.onerror = function () {
+        pdfLib = null;
+        dlStatus.textContent = "The PDF tool didn't load. Check your connection and try again.";
+      };
+      document.head.appendChild(sc);
+    }
+
+    function buildPdf(line) {
+      var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+      var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+      var M = 54, labelW = 190, valueX = M + labelW + 12, valueW = W - valueX - M;
+      var BLUE = [74, 111, 179], TEXT = [61, 66, 77], MUTED = [107, 113, 125], LINE = [217, 221, 228];
+      var kind = line.sheet.replace(/ quote requests$/, '');
+      var y;
+
+      function footer() {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor.apply(doc, MUTED);
+        doc.text('Ellis County Insurance Agency  ·  972-938-2801  ·  Demo prototype by Hearth & Hustle', M, H - 30);
+      }
+      function newPage(first) {
+        if (!first) { footer(); doc.addPage(); }
+        y = M;
+      }
+      function room(h) { if (y + h > H - 54) { newPage(false); } }
+
+      line.rows.forEach(function (r, i) {
+        newPage(i === 0);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor.apply(doc, BLUE);
+        doc.text(kind + ' Quote Request', M, y + 6);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor.apply(doc, MUTED);
+        doc.text('Ellis County Insurance Agency  ·  Submitted ' + r._submitted +
+          '  ·  Request ' + (i + 1) + ' of ' + line.rows.length, M, y + 24);
+        y += 44;
+
+        var section = null, any = false;
+        line.columns.forEach(function (c) {
+          if (c.key === '_submitted') return;
+          var v = String(r[c.key] || '').trim();
+          if (!v) return; // only show questions that were answered
+          any = true;
+          var split = c.label.indexOf(': ');
+          var sec = c.label.slice(0, split), label = c.label.slice(split + 2);
+          doc.setFontSize(10);
+          var valueLines = doc.splitTextToSize(v, valueW);
+          var labelLines = doc.splitTextToSize(label, labelW);
+          var h = Math.max(valueLines.length, labelLines.length) * 13 + 6;
+          if (sec !== section) {
+            room(32 + h);
+            section = sec;
+            y += 8;
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor.apply(doc, BLUE);
+            doc.text(sec, M, y);
+            doc.setDrawColor.apply(doc, LINE); doc.setLineWidth(0.75);
+            doc.line(M, y + 5, W - M, y + 5);
+            y += 20;
+          } else {
+            room(h);
+          }
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor.apply(doc, MUTED);
+          doc.text(labelLines, M, y);
+          // Draw the answer line by line so a long one continues on the next page.
+          var labelEnd = y + labelLines.length * 13;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor.apply(doc, TEXT);
+          valueLines.forEach(function (ln, k) {
+            if (k > 0 && y + 13 > H - 54) {
+              newPage(false);
+              doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor.apply(doc, TEXT);
+              labelEnd = y;
+            } else if (k > 0) {
+              y += 13;
+            }
+            doc.text(ln, valueX, y);
+          });
+          y = Math.max(y + 13, labelEnd) + 6;
+        });
+        if (!any) {
+          doc.setFont('helvetica', 'italic'); doc.setFontSize(10); doc.setTextColor.apply(doc, MUTED);
+          doc.text('No answers were filled in.', M, y);
+        }
+      });
+      footer();
+      return doc.output('blob');
+    }
+
+    document.getElementById('dl-pdf').addEventListener('click', function () {
+      var line = LINES[current];
+      dlStatus.textContent = '';
+      loadPdfLib(function () {
+        saveBlob(buildPdf(line), line.file + '.pdf');
+      });
     });
 
     window.addEventListener('hashchange', function () { selectLine(location.hash.slice(1)); });
