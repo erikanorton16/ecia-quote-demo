@@ -126,13 +126,16 @@
   .checks input { width: auto; }
   .group-label { font-size: .9rem; font-weight: 600; margin-bottom: 6px; }
 
-  .done { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 18px; }
+  .done { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 14px 18px; }
   .done h2 { margin: 0 0 4px; font-size: 1.25rem; }
   .done h2:focus { outline: none; }
   .done p { margin: 0; color: var(--muted); }
   .done .actions { margin-top: 14px; }
-  .done a { color: var(--accent); }
-  .agency { margin-top: 28px; border: 2px dashed var(--line); border-radius: var(--radius); padding: 16px 18px 18px; }
+  .done a { color: var(--accent); white-space: nowrap; }
+  .view-label { margin: 0 0 8px; font: 600 .78rem/1.4 Montserrat, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .view-divider { display: flex; align-items: center; gap: 12px; margin: 32px 0 14px; font: 600 .78rem/1.4 Montserrat, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .view-divider::before, .view-divider::after { content: ""; flex: 1; border-top: 2px solid var(--line); }
+  .agency { background: var(--card); border: 2px dashed var(--line); border-radius: var(--radius); padding: 16px 18px 18px; }
   .agency-tag { display: inline-block; margin: 0 0 8px; padding: 3px 10px; border-radius: 999px; background: var(--text); color: var(--card); font: 600 .75rem/1.4 Montserrat, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
   .agency-intro { margin: 0 0 14px; color: var(--muted); font-size: .95rem; }
   .sheet-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
@@ -717,14 +720,17 @@
   </form>
 
   <section id="results" hidden aria-labelledby="results-title">
+    <p class="view-label">What your client sees</p>
     <div class="done">
-      <h2 id="results-title" tabindex="-1">Thanks, your quote request is in.</h2>
-      <p>One of our agents will get back to you shortly. Questions in the meantime? Call <a href="tel:+19729382801">972-938-2801</a>.</p>
+      <h2 id="results-title" tabindex="-1">Thanks for reaching out! Your quote request is in.</h2>
+      <p>One of our agents will be in touch shortly. Have a question in the meantime? Give us a call at <a href="tel:+19729382801">972-938-2801</a>.</p>
       <div class="actions">
         <button type="button" class="secondary" id="edit-btn">Edit these answers</button>
         <button type="button" class="secondary" id="new-btn">Start a new quote</button>
       </div>
     </div>
+
+    <div class="view-divider" role="separator"><span>What you see</span></div>
 
     <div class="agency">
     <p class="agency-tag">For ECIA use only &middot; Demo preview</p>
