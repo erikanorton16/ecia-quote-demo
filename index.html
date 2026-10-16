@@ -130,6 +130,11 @@
   .done h2 { margin: 0 0 4px; font-size: 1.25rem; }
   .done h2:focus { outline: none; }
   .done p { margin: 0; color: var(--muted); }
+  .done .actions { margin-top: 14px; }
+  .done a { color: var(--accent); }
+  .agency { margin-top: 28px; border: 2px dashed var(--line); border-radius: var(--radius); padding: 16px 18px 18px; }
+  .agency-tag { display: inline-block; margin: 0 0 8px; padding: 3px 10px; border-radius: 999px; background: var(--text); color: var(--card); font: 600 .75rem/1.4 Montserrat, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+  .agency-intro { margin: 0 0 14px; color: var(--muted); font-size: .95rem; }
   .sheet-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
   .sheet-head span { color: var(--muted); font-size: .9rem; }
   .sheet-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
@@ -138,7 +143,7 @@
   .sheet thead th { background: var(--accent-soft); color: var(--accent); font-weight: 600; position: sticky; top: 0; }
   .sheet .rownum { background: var(--bg); color: var(--muted); text-align: center; min-width: 2.5em; }
   .sheet tr.latest td { background: var(--note-bg); }
-  .pitch { margin-top: 16px; font-size: .95rem; }
+  .pitch { margin: 16px 0 0; font-size: .95rem; }
 
   @media print {
     :root { --bg: #fff; --card: #fff; --text: #000; --line: #999; --accent: #000; --accent-soft: #fff; }
@@ -714,8 +719,16 @@
   <section id="results" hidden aria-labelledby="results-title">
     <div class="done">
       <h2 id="results-title" tabindex="-1">Thanks, your quote request is in.</h2>
-      <p>Below is how each submission would land in the agency's spreadsheet: one row per client, one column per question. Nobody has to retype it from a PDF.</p>
+      <p>One of our agents will get back to you shortly. Questions in the meantime? Call <a href="tel:+19729382801">972-938-2801</a>.</p>
+      <div class="actions">
+        <button type="button" class="secondary" id="edit-btn">Edit these answers</button>
+        <button type="button" class="secondary" id="new-btn">Start a new quote</button>
+      </div>
     </div>
+
+    <div class="agency">
+    <p class="agency-tag">For ECIA use only &middot; Demo preview</p>
+    <p class="agency-intro">Below is how each submission would land in the agency's spreadsheet: one row per client, one column per question. Nobody has to retype it from a PDF.</p>
     <div class="sheet-head">
       <strong id="sheet-title">Home quote requests</strong>
       <span id="row-count"></span>
@@ -726,10 +739,9 @@
     <p class="hint">Scroll sideways to see every column. Social Security numbers are partly hidden in this preview.</p>
     <div class="actions">
       <button type="button" class="primary" id="download-btn">Download spreadsheet</button>
-      <button type="button" class="secondary" id="edit-btn">Edit these answers</button>
-      <button type="button" class="secondary" id="new-btn">Start a new quote</button>
     </div>
     <p class="pitch">In a live setup, this row would be added automatically to Google Sheets, Excel, or the agency's own system the moment the client hits Submit.</p>
+    </div>
   </section>
 </main>
 <footer class="site-foot">
