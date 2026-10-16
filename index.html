@@ -112,7 +112,19 @@
   }
   .primary { background: var(--button); border-color: var(--button); color: var(--button-text); }
   .secondary { background: transparent; color: var(--accent); }
-  #status { margin-top: 12px; color: var(--muted); min-height: 1.5em; }
+  .status { margin-top: 12px; color: var(--muted); min-height: 1.5em; }
+
+  .lines { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+  .lines-label { font-family: Montserrat, system-ui, sans-serif; font-weight: 600; margin: 0 0 8px; }
+  .lines button { background: var(--card); color: var(--accent); border: 1px solid var(--line); padding: 12px 8px; font-weight: 600; }
+  .lines button[aria-pressed="true"] { background: var(--button); border-color: var(--button); color: var(--button-text); }
+  @media (max-width: 640px) { .lines { grid-template-columns: repeat(2, 1fr); } }
+  .draft-note { background: var(--accent-soft); border-radius: var(--radius); padding: 10px 14px; margin: 0 0 18px; font-size: .9rem; }
+  .checks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 16px; }
+  @media (max-width: 640px) { .checks { grid-template-columns: 1fr; } }
+  .checks label { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+  .checks input { width: auto; }
+  .group-label { font-size: .9rem; font-weight: 600; margin-bottom: 6px; }
 
   .done { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 18px; }
   .done h2 { margin: 0 0 4px; font-size: 1.25rem; }
@@ -137,7 +149,7 @@
     .hero p, .site-foot .credit { display: none; }
     .topbar { border: none; }
     .site-foot { background: none; color: #000; }
-    .demo-note, .actions, #status, .toggle, #results { display: none; }
+    .demo-note, .actions, .status, .toggle, #results, .lines, .lines-label, .draft-note { display: none; }
     fieldset { break-inside: avoid; border-color: #999; padding: 8px 12px 10px; margin-bottom: 10px; }
     legend { padding: 0 6px; }
     input, select, textarea { border: none; border-bottom: 1px solid #999; border-radius: 0; padding: 2px 4px; }
@@ -154,7 +166,7 @@
 </header>
 <section class="hero">
   <div class="hero-inner">
-    <h1>Get a Homeowners Quote</h1>
+    <h1 id="hero-title">Get a Home Quote</h1>
     <p>Fill in what you know and leave anything blank that doesn't apply. We'll do the insurance shopping for you.</p>
   </div>
 </section>
@@ -164,7 +176,16 @@
     <strong>Demo prototype.</strong> This page doesn't send your answers anywhere. When you hit Submit, you'll see how they would land in a spreadsheet, and you can download that spreadsheet. Please don't enter real Social Security numbers or other personal details here.
   </div>
 
-  <form id="quote-form" novalidate>
+  <p class="lines-label" id="lines-label">What would you like a quote for?</p>
+  <div class="lines" role="group" aria-labelledby="lines-label">
+    <button type="button" data-line="home" aria-pressed="true">Home</button>
+    <button type="button" data-line="auto" aria-pressed="false">Auto</button>
+    <button type="button" data-line="life" aria-pressed="false">Life</button>
+    <button type="button" data-line="business" aria-pressed="false">Business</button>
+  </div>
+
+  <!-- ================= HOME (from ECIA's PDF form) ================= -->
+  <form class="quote-form" data-line="home" novalidate>
     <!-- Applicant -->
     <fieldset data-section="Applicant">
       <legend>Applicant Information</legend>
@@ -308,10 +329,284 @@
 
     <div class="actions">
       <button type="submit" class="primary">Submit</button>
-      <button type="button" class="secondary" id="print-btn">Print / Save as PDF</button>
+      <button type="button" class="secondary print-btn">Print / Save as PDF</button>
       <button type="reset" class="secondary">Clear form</button>
     </div>
-    <p id="status" aria-live="polite"></p>
+    <p class="status" aria-live="polite"></p>
+  </form>
+
+  <!-- ================= AUTO (draft) ================= -->
+  <form class="quote-form" data-line="auto" novalidate hidden>
+    <p class="draft-note"><strong>Draft questions.</strong> These are the questions agencies typically ask for this type of quote. ECIA's own form can be swapped in.</p>
+    <fieldset data-section="Driver 1">
+      <legend>Primary Driver</legend>
+      <div class="grid">
+        <div class="field s8"><label for="a_name">Name</label><input id="a_name" name="a_name" autocomplete="name"></div>
+        <div class="field s4"><label for="a_phone">Phone #</label><input id="a_phone" name="a_phone" type="tel" autocomplete="tel"></div>
+        <div class="field"><label for="a_email">Email address</label><input id="a_email" name="a_email" type="email" autocomplete="email"></div>
+        <div class="field s6"><label for="a_dob">Date of Birth</label><input id="a_dob" name="a_dob" type="date"></div>
+        <div class="field s6">
+          <label for="a_marital">Marital status</label>
+          <select id="a_marital" name="a_marital"><option value=""></option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option></select>
+        </div>
+        <div class="field s8"><label for="a_license">Driver's license #</label><input id="a_license" name="a_license" autocomplete="off"></div>
+        <div class="field s4"><label for="a_lic_state">License state</label><input id="a_lic_state" name="a_lic_state" placeholder="TX"></div>
+        <div class="field"><label for="a_occ">Occupation</label><input id="a_occ" name="a_occ"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Address">
+      <legend>Home Address (where vehicles are kept)</legend>
+      <div class="grid">
+        <div class="field s6"><label for="a_address">Address</label><input id="a_address" name="a_address" autocomplete="street-address"></div>
+        <div class="field s3"><label for="a_city">City</label><input id="a_city" name="a_city" autocomplete="address-level2"></div>
+        <div class="field s3"><label for="a_zip">ZIP</label><input id="a_zip" name="a_zip" inputmode="numeric" autocomplete="postal-code"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Driver 2">
+      <legend>Additional Driver (if applicable)</legend>
+      <label class="toggle"><input type="checkbox" data-reveals="auto-d2"> Add another driver</label>
+      <div id="auto-d2" hidden>
+        <div class="grid">
+          <div class="field s8"><label for="a_d2_name">Name</label><input id="a_d2_name" name="a_d2_name"></div>
+          <div class="field s4"><label for="a_d2_dob">Date of Birth</label><input id="a_d2_dob" name="a_d2_dob" type="date"></div>
+          <div class="field s6"><label for="a_d2_license">Driver's license #</label><input id="a_d2_license" name="a_d2_license" autocomplete="off"></div>
+          <div class="field s6">
+          <label for="a_d2_rel">Relationship to primary driver</label>
+          <select id="a_d2_rel" name="a_d2_rel"><option value=""></option><option>Spouse</option><option>Child</option><option>Parent</option><option>Other household member</option></select>
+        </div>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Vehicle 1">
+      <legend>Vehicle</legend>
+      <div class="grid">
+        <div class="field s4"><label for="a_v1_year">Year</label><input id="a_v1_year" name="a_v1_year" inputmode="numeric"></div>
+        <div class="field s4"><label for="a_v1_make">Make</label><input id="a_v1_make" name="a_v1_make"></div>
+        <div class="field s4"><label for="a_v1_model">Model</label><input id="a_v1_model" name="a_v1_model"></div>
+        <div class="field s8"><label for="a_v1_vin">VIN</label><input id="a_v1_vin" name="a_v1_vin" autocomplete="off"></div>
+        <div class="field s4">
+          <label for="a_v1_own">Owned, financed or leased</label>
+          <select id="a_v1_own" name="a_v1_own"><option value=""></option><option>Owned</option><option>Financed</option><option>Leased</option></select>
+        </div>
+        <div class="field s6">
+          <label for="a_v1_use">Primary use</label>
+          <select id="a_v1_use" name="a_v1_use"><option value=""></option><option>Commute to work/school</option><option>Pleasure</option><option>Business</option><option>Farm</option></select>
+        </div>
+        <div class="field s6"><label for="a_v1_miles">Annual miles (estimate)</label><input id="a_v1_miles" name="a_v1_miles" type="number" min="0"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Vehicle 2">
+      <legend>Second Vehicle (if applicable)</legend>
+      <label class="toggle"><input type="checkbox" data-reveals="auto-v2"> Add another vehicle</label>
+      <div id="auto-v2" hidden>
+        <div class="grid">
+          <div class="field s4"><label for="a_v2_year">Year</label><input id="a_v2_year" name="a_v2_year" inputmode="numeric"></div>
+          <div class="field s4"><label for="a_v2_make">Make</label><input id="a_v2_make" name="a_v2_make"></div>
+          <div class="field s4"><label for="a_v2_model">Model</label><input id="a_v2_model" name="a_v2_model"></div>
+          <div class="field s8"><label for="a_v2_vin">VIN</label><input id="a_v2_vin" name="a_v2_vin" autocomplete="off"></div>
+          <div class="field s4">
+            <label for="a_v2_own">Owned, financed or leased</label>
+            <select id="a_v2_own" name="a_v2_own"><option value=""></option><option>Owned</option><option>Financed</option><option>Leased</option></select>
+          </div>
+          <div class="field s6">
+            <label for="a_v2_use">Primary use</label>
+            <select id="a_v2_use" name="a_v2_use"><option value=""></option><option>Commute to work/school</option><option>Pleasure</option><option>Business</option><option>Farm</option></select>
+          </div>
+          <div class="field s6"><label for="a_v2_miles">Annual miles (estimate)</label><input id="a_v2_miles" name="a_v2_miles" type="number" min="0"></div>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset data-section="History">
+      <legend>Driving History</legend>
+      <div class="grid">
+        <div class="field"><label for="a_history">Accidents, tickets or claims in the last 5 years (any driver)</label><textarea id="a_history" name="a_history"></textarea></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Prior Insurance">
+      <legend>Current/Prior Insurance Information</legend>
+      <div class="grid">
+        <div class="field s6"><label for="a_carrier">Current/Prior Carrier</label><input id="a_carrier" name="a_carrier"></div>
+        <div class="field s6"><label for="a_howlong">How Long</label><input id="a_howlong" name="a_howlong" placeholder="e.g. 3 years"></div>
+        <div class="field s6"><label for="a_exp">Exp/Renewal Date</label><input id="a_exp" name="a_exp" type="date"></div>
+        <div class="field s6"><label for="a_premium">Premium ($)</label><input id="a_premium" name="a_premium" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <div class="field s6"><label for="a_limits">Current liability limits</label><input id="a_limits" name="a_limits" placeholder="e.g. 30/60/25"></div>
+        <div class="field s6">
+          <label for="a_lapse">Any lapse in coverage?</label>
+          <select id="a_lapse" name="a_lapse"><option value=""></option><option>Yes</option><option>No</option></select>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Coverage">
+      <legend>Coverage You're Interested In</legend>
+      <div class="grid">
+        <div class="field" data-group-label="Coverages">
+          <div class="group-label">Coverages</div>
+          <div class="checks">
+            <label><input type="checkbox" name="a_cov" value="Liability"> Liability</label>
+            <label><input type="checkbox" name="a_cov" value="Comprehensive &amp; collision"> Comprehensive &amp; collision</label>
+            <label><input type="checkbox" name="a_cov" value="Uninsured/underinsured motorist"> Uninsured/underinsured motorist</label>
+            <label><input type="checkbox" name="a_cov" value="Rental reimbursement"> Rental reimbursement</label>
+            <label><input type="checkbox" name="a_cov" value="Roadside assistance"> Roadside assistance</label>
+            <label><input type="checkbox" name="a_cov" value="Not sure, please recommend"> Not sure, please recommend</label>
+          </div>
+        </div>
+        <div class="field s6">
+          <label for="a_deductible">Preferred deductible</label>
+          <select id="a_deductible" name="a_deductible"><option value=""></option><option>$250</option><option>$500</option><option>$1,000</option><option>$2,500</option><option>Not sure</option></select>
+        </div>
+      </div>
+    </fieldset>
+    <div class="actions">
+      <button type="submit" class="primary">Submit</button>
+      <button type="button" class="secondary print-btn">Print / Save as PDF</button>
+      <button type="reset" class="secondary">Clear form</button>
+    </div>
+    <p class="status" aria-live="polite"></p>
+  </form>
+
+  <!-- ================= LIFE (draft) ================= -->
+  <form class="quote-form" data-line="life" novalidate hidden>
+    <p class="draft-note"><strong>Draft questions.</strong> These are the questions agencies typically ask for this type of quote. ECIA's own form can be swapped in.</p>
+    <fieldset data-section="Applicant">
+      <legend>Applicant Information</legend>
+      <div class="grid">
+        <div class="field s8"><label for="l_name">Name</label><input id="l_name" name="l_name" autocomplete="name"></div>
+        <div class="field s4"><label for="l_phone">Phone #</label><input id="l_phone" name="l_phone" type="tel" autocomplete="tel"></div>
+        <div class="field"><label for="l_email">Email address</label><input id="l_email" name="l_email" type="email" autocomplete="email"></div>
+        <div class="field s6"><label for="l_dob">Date of Birth</label><input id="l_dob" name="l_dob" type="date"></div>
+        <div class="field s6">
+          <label for="l_sex">Sex</label>
+          <select id="l_sex" name="l_sex"><option value=""></option><option>Female</option><option>Male</option></select>
+        </div>
+        <div class="field s3"><label for="l_height">Height</label><input id="l_height" name="l_height" placeholder="e.g. 5 ft 8 in"></div>
+        <div class="field s3"><label for="l_weight">Weight (lbs)</label><input id="l_weight" name="l_weight" type="number" min="0"></div>
+        <div class="field s6">
+          <label for="l_tobacco">Tobacco or nicotine use</label>
+          <select id="l_tobacco" name="l_tobacco"><option value=""></option><option>Never</option><option>Quit more than 1 year ago</option><option>Currently use</option></select>
+        </div>
+        <div class="field s8"><label for="l_occ">Occupation</label><input id="l_occ" name="l_occ"></div>
+        <div class="field s4"><label for="l_income">Annual income ($)</label><input id="l_income" name="l_income" type="number" min="0" inputmode="decimal"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Coverage">
+      <legend>Coverage You're Interested In</legend>
+      <div class="grid">
+        <div class="field s6">
+          <label for="l_type">Type of policy</label>
+          <select id="l_type" name="l_type"><option value=""></option><option>Term</option><option>Whole life</option><option>Universal life</option><option>Not sure, please recommend</option></select>
+        </div>
+        <div class="field s6">
+          <label for="l_term">Term length (if term)</label>
+          <select id="l_term" name="l_term"><option value=""></option><option>10 years</option><option>15 years</option><option>20 years</option><option>30 years</option><option>Not sure</option></select>
+        </div>
+        <div class="field s6"><label for="l_amount">Coverage amount ($)</label><input id="l_amount" name="l_amount" type="number" min="0" inputmode="decimal"></div>
+        <div class="field s6">
+          <label for="l_purpose">Main reason for coverage</label>
+          <select id="l_purpose" name="l_purpose"><option value=""></option><option>Income replacement</option><option>Pay off mortgage/debts</option><option>Final expenses</option><option>Leave an inheritance</option><option>Business needs</option><option>Other</option></select>
+        </div>
+        <div class="field s8"><label for="l_benef">Primary beneficiary name</label><input id="l_benef" name="l_benef"></div>
+        <div class="field s4"><label for="l_benef_rel">Relationship</label><input id="l_benef_rel" name="l_benef_rel"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Health">
+      <legend>Health &amp; Lifestyle</legend>
+      <div class="grid">
+        <div class="field"><label for="l_health">Health conditions or medications (e.g. high blood pressure, diabetes, heart conditions)</label><textarea id="l_health" name="l_health"></textarea></div>
+        <div class="field"><label for="l_hobbies">Risky activities, if any (e.g. scuba, skydiving, private pilot)</label><input id="l_hobbies" name="l_hobbies"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Existing Coverage">
+      <legend>Existing Life Insurance (if applicable)</legend>
+      <div class="grid">
+        <div class="field s4">
+          <label for="l_existing">Do you have life insurance now?</label>
+          <select id="l_existing" name="l_existing"><option value=""></option><option>Yes</option><option>No</option></select>
+        </div>
+        <div class="field s4"><label for="l_ex_carrier">Carrier</label><input id="l_ex_carrier" name="l_ex_carrier"></div>
+        <div class="field s4"><label for="l_ex_amount">Coverage amount ($)</label><input id="l_ex_amount" name="l_ex_amount" type="number" min="0" inputmode="decimal"></div>
+      </div>
+    </fieldset>
+    <div class="actions">
+      <button type="submit" class="primary">Submit</button>
+      <button type="button" class="secondary print-btn">Print / Save as PDF</button>
+      <button type="reset" class="secondary">Clear form</button>
+    </div>
+    <p class="status" aria-live="polite"></p>
+  </form>
+
+  <!-- ================= BUSINESS (draft) ================= -->
+  <form class="quote-form" data-line="business" novalidate hidden>
+    <p class="draft-note"><strong>Draft questions.</strong> These are the questions agencies typically ask for this type of quote. ECIA's own form can be swapped in.</p>
+    <fieldset data-section="Business">
+      <legend>Business Information</legend>
+      <div class="grid">
+        <div class="field s8"><label for="b_name">Business name</label><input id="b_name" name="b_name" autocomplete="organization"></div>
+        <div class="field s4"><label for="b_dba">DBA (if different)</label><input id="b_dba" name="b_dba"></div>
+        <div class="field s6"><label for="b_contact">Contact name</label><input id="b_contact" name="b_contact" autocomplete="name"></div>
+        <div class="field s6"><label for="b_title">Title</label><input id="b_title" name="b_title"></div>
+        <div class="field s6"><label for="b_phone">Phone #</label><input id="b_phone" name="b_phone" type="tel" autocomplete="tel"></div>
+        <div class="field s6"><label for="b_email">Email address</label><input id="b_email" name="b_email" type="email" autocomplete="email"></div>
+        <div class="field s6"><label for="b_address">Address</label><input id="b_address" name="b_address" autocomplete="street-address"></div>
+        <div class="field s3"><label for="b_city">City</label><input id="b_city" name="b_city" autocomplete="address-level2"></div>
+        <div class="field s3"><label for="b_zip">ZIP</label><input id="b_zip" name="b_zip" inputmode="numeric" autocomplete="postal-code"></div>
+        <div class="field"><label for="b_desc">What does the business do?</label><textarea id="b_desc" name="b_desc"></textarea></div>
+        <div class="field s6">
+          <label for="b_entity">Business structure</label>
+          <select id="b_entity" name="b_entity"><option value=""></option><option>Sole proprietor</option><option>LLC</option><option>Corporation</option><option>Partnership</option><option>Nonprofit</option></select>
+        </div>
+        <div class="field s6"><label for="b_years">Years in business</label><input id="b_years" name="b_years" type="number" min="0"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Operations">
+      <legend>Size &amp; Operations</legend>
+      <div class="grid">
+        <div class="field s6"><label for="b_ft">Full-time employees</label><input id="b_ft" name="b_ft" type="number" min="0"></div>
+        <div class="field s6"><label for="b_pt">Part-time employees</label><input id="b_pt" name="b_pt" type="number" min="0"></div>
+        <div class="field s6"><label for="b_revenue">Annual revenue ($)</label><input id="b_revenue" name="b_revenue" type="number" min="0" inputmode="decimal"></div>
+        <div class="field s6"><label for="b_payroll">Annual payroll ($)</label><input id="b_payroll" name="b_payroll" type="number" min="0" inputmode="decimal"></div>
+        <div class="field s6">
+          <label for="b_premises">Do you own or lease your location?</label>
+          <select id="b_premises" name="b_premises"><option value=""></option><option>Own</option><option>Lease</option><option>Work from home</option><option>No fixed location</option></select>
+        </div>
+        <div class="field s6"><label for="b_sqft">Square footage</label><input id="b_sqft" name="b_sqft" type="number" min="0"></div>
+        <div class="field s6"><label for="b_contents">Value of equipment, inventory &amp; contents ($)</label><input id="b_contents" name="b_contents" type="number" min="0" inputmode="decimal"></div>
+        <div class="field s6"><label for="b_vehicles">Number of business vehicles</label><input id="b_vehicles" name="b_vehicles" type="number" min="0"></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Coverage">
+      <legend>Coverage You're Interested In</legend>
+      <div class="grid">
+        <div class="field" data-group-label="Coverages">
+          <div class="group-label">Coverages</div>
+          <div class="checks">
+            <label><input type="checkbox" name="b_cov" value="General liability"> General liability</label>
+            <label><input type="checkbox" name="b_cov" value="Business owner's policy (BOP)"> Business owner's policy (BOP)</label>
+            <label><input type="checkbox" name="b_cov" value="Commercial property"> Commercial property</label>
+            <label><input type="checkbox" name="b_cov" value="Workers' compensation"> Workers' compensation</label>
+            <label><input type="checkbox" name="b_cov" value="Commercial auto"> Commercial auto</label>
+            <label><input type="checkbox" name="b_cov" value="Professional liability (E&amp;O)"> Professional liability (E&amp;O)</label>
+            <label><input type="checkbox" name="b_cov" value="Cyber liability"> Cyber liability</label>
+            <label><input type="checkbox" name="b_cov" value="Umbrella"> Umbrella</label>
+            <label><input type="checkbox" name="b_cov" value="Not sure, please recommend"> Not sure, please recommend</label>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Prior Insurance">
+      <legend>Current/Prior Insurance Information</legend>
+      <div class="grid">
+        <div class="field s6"><label for="b_carrier">Current/Prior Carrier</label><input id="b_carrier" name="b_carrier"></div>
+        <div class="field s6"><label for="b_exp">Exp/Renewal Date</label><input id="b_exp" name="b_exp" type="date"></div>
+        <div class="field s6"><label for="b_premium">Annual premium ($)</label><input id="b_premium" name="b_premium" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <div class="field"><label for="b_claims">Claims in the last 5 years</label><textarea id="b_claims" name="b_claims"></textarea></div>
+      </div>
+    </fieldset>
+    <div class="actions">
+      <button type="submit" class="primary">Submit</button>
+      <button type="button" class="secondary print-btn">Print / Save as PDF</button>
+      <button type="reset" class="secondary">Clear form</button>
+    </div>
+    <p class="status" aria-live="polite"></p>
   </form>
 
   <section id="results" hidden aria-labelledby="results-title">
@@ -320,7 +615,7 @@
       <p>Below is how each submission would land in the agency's spreadsheet: one row per client, one column per question. Nobody has to retype it from a PDF.</p>
     </div>
     <div class="sheet-head">
-      <strong>Quote requests</strong>
+      <strong id="sheet-title">Home quote requests</strong>
       <span id="row-count"></span>
     </div>
     <div class="sheet-wrap" tabindex="0" aria-label="Spreadsheet preview, scrolls sideways">
@@ -346,61 +641,52 @@
 
 <script>
   (function () {
-    var form = document.getElementById('quote-form');
-    var status = document.getElementById('status');
-
-    // Show/hide optional sections (co-applicant, pool).
-    function syncToggles() {
-      form.querySelectorAll('[data-reveals]').forEach(function (box) {
-        document.getElementById(box.dataset.reveals).hidden = !box.checked;
-      });
-    }
-    form.addEventListener('change', function (e) {
-      if (e.target.matches('[data-reveals]')) syncToggles();
-    });
-
-    // ---- Submit -> spreadsheet preview ----
+    // Each line of business has its own form, columns and rows.
     // Rows live only in this browser tab's memory; nothing is sent or stored.
+    var LINES = {
+      home:     { title: 'Get a Home Quote',           sheet: 'Home quote requests',     file: 'ecia-home-quote-requests.csv' },
+      auto:     { title: 'Get an Auto Quote',          sheet: 'Auto quote requests',     file: 'ecia-auto-quote-requests.csv' },
+      life:     { title: 'Get a Life Insurance Quote', sheet: 'Life quote requests',     file: 'ecia-life-quote-requests.csv' },
+      business: { title: 'Get a Business Quote',       sheet: 'Business quote requests', file: 'ecia-business-quote-requests.csv' }
+    };
     var results = document.getElementById('results');
     var sheet = document.getElementById('sheet');
-    var columns = buildColumns();
-    var rows = [];
-    var editingIndex = null;
+    var picker = document.querySelector('.lines');
+    var pickerLabel = document.getElementById('lines-label');
+    var demoNote = document.querySelector('.demo-note');
+    var current = 'home';
     var skipConfirm = false;
 
-    function buildColumns() {
+    function buildColumns(form) {
       var cols = [{ key: '_submitted', label: 'Submitted' }];
+      var seen = {};
       form.querySelectorAll('fieldset[data-section]').forEach(function (fs) {
         fs.querySelectorAll('input[name], select[name], textarea[name]').forEach(function (el) {
-          var lab = form.querySelector('label[for="' + el.id + '"]');
-          var text = lab ? lab.textContent : el.getAttribute('aria-label');
+          if (seen[el.name]) return; // a checkbox group shares one column
+          seen[el.name] = true;
+          var text;
+          if (el.type === 'checkbox') {
+            text = el.closest('[data-group-label]').dataset.groupLabel;
+          } else {
+            var lab = form.querySelector('label[for="' + el.id + '"]');
+            text = lab ? lab.textContent : el.getAttribute('aria-label');
+          }
           cols.push({ key: el.name, label: fs.dataset.section + ': ' + text.trim() });
         });
       });
       return cols;
     }
 
+    // Show/hide optional sections (co-applicant, pool, extra driver, ...).
+    function syncToggles(form) {
+      form.querySelectorAll('[data-reveals]').forEach(function (box) {
+        document.getElementById(box.dataset.reveals).hidden = !box.checked;
+      });
+    }
+
     function maskSsn(v) {
       var digits = v.replace(/\D/g, '');
       return digits.length >= 4 ? '***-**-' + digits.slice(-4) : v;
-    }
-
-    function renderSheet() {
-      var head = '<tr><th class="rownum"></th>' + columns.map(function (c) {
-        return '<th>' + escapeHtml(c.label) + '</th>';
-      }).join('') + '</tr>';
-      var body = rows.map(function (r, i) {
-        return '<tr' + (i === editingIndex ? ' class="latest"' : '') + '><td class="rownum">' + (i + 1) + '</td>' +
-          columns.map(function (c) {
-            var v = r[c.key] || '';
-            if (/_ssn$/.test(c.key)) v = maskSsn(v);
-            return '<td title="' + escapeHtml(v) + '">' + escapeHtml(v) + '</td>';
-          }).join('') + '</tr>';
-      }).join('');
-      sheet.tHead.innerHTML = head;
-      sheet.tBodies[0].innerHTML = body;
-      document.getElementById('row-count').textContent =
-        rows.length + (rows.length === 1 ? ' submission' : ' submissions');
     }
 
     function escapeHtml(s) {
@@ -409,39 +695,118 @@
       });
     }
 
-    function showResults(show) {
-      form.hidden = show;
-      document.querySelector('.demo-note').hidden = show;
-      results.hidden = !show;
-      window.scrollTo(0, 0);
-      if (show) document.getElementById('results-title').focus();
+    function renderSheet(line) {
+      var head = '<tr><th class="rownum"></th>' + line.columns.map(function (c) {
+        return '<th>' + escapeHtml(c.label) + '</th>';
+      }).join('') + '</tr>';
+      var body = line.rows.map(function (r, i) {
+        return '<tr' + (i === line.editingIndex ? ' class="latest"' : '') + '><td class="rownum">' + (i + 1) + '</td>' +
+          line.columns.map(function (c) {
+            var v = r[c.key] || '';
+            if (/_ssn$/.test(c.key)) v = maskSsn(v);
+            return '<td title="' + escapeHtml(v) + '">' + escapeHtml(v) + '</td>';
+          }).join('') + '</tr>';
+      }).join('');
+      sheet.tHead.innerHTML = head;
+      sheet.tBodies[0].innerHTML = body;
+      document.getElementById('sheet-title').textContent = line.sheet;
+      document.getElementById('row-count').textContent =
+        line.rows.length + (line.rows.length === 1 ? ' submission' : ' submissions');
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var invalid = form.querySelector(':invalid');
-      if (invalid) {
-        status.textContent = 'Please check the highlighted field before submitting.';
-        invalid.focus();
-        return;
+    function showResults(show) {
+      LINES[current].form.hidden = show;
+      demoNote.hidden = show;
+      picker.hidden = show;
+      pickerLabel.hidden = show;
+      results.hidden = !show;
+      if (show) {
+        window.scrollTo(0, 0);
+        document.getElementById('results-title').focus();
       }
-      status.textContent = '';
-      var row = { _submitted: new Date().toLocaleString() };
-      var data = new FormData(form);
-      columns.forEach(function (c) {
-        if (c.key === '_submitted') return;
-        var el = form.elements[c.key];
-        // Skip answers inside a section that was switched off.
-        row[c.key] = el.closest('[hidden]') ? '' : String(data.get(c.key) || '').trim();
+    }
+
+    function selectLine(key) {
+      if (!LINES[key]) key = 'home';
+      current = key;
+      Object.keys(LINES).forEach(function (k) { LINES[k].form.hidden = k !== key; });
+      picker.querySelectorAll('button').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.dataset.line === key));
       });
-      if (editingIndex === null) {
-        rows.push(row);
-        editingIndex = rows.length - 1;
-      } else {
-        rows[editingIndex] = row;
-      }
-      renderSheet();
-      showResults(true);
+      document.getElementById('hero-title').textContent = LINES[key].title;
+      document.title = 'ECIA ' + LINES[key].title.replace(/^Get an? /, '');
+      if (location.hash !== '#' + key) history.replaceState(null, '', '#' + key);
+      showResults(false);
+    }
+
+    function wireForm(line) {
+      var form = line.form;
+
+      form.addEventListener('change', function (e) {
+        if (e.target.matches('[data-reveals]')) syncToggles(form);
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var invalid = form.querySelector(':invalid');
+        if (invalid) {
+          line.status.textContent = 'Please check the highlighted field before submitting.';
+          invalid.focus();
+          return;
+        }
+        line.status.textContent = '';
+        var row = { _submitted: new Date().toLocaleString() };
+        var data = new FormData(form);
+        line.columns.forEach(function (c) {
+          if (c.key === '_submitted') return;
+          var el = form.querySelector('[name="' + c.key + '"]');
+          // Skip answers inside a section that was switched off.
+          row[c.key] = el.closest('[hidden]') ? '' :
+            data.getAll(c.key).map(function (v) { return String(v).trim(); }).filter(Boolean).join(', ');
+        });
+        if (line.editingIndex === null) {
+          line.rows.push(row);
+          line.editingIndex = line.rows.length - 1;
+        } else {
+          line.rows[line.editingIndex] = row;
+        }
+        renderSheet(line);
+        showResults(true);
+      });
+
+      form.querySelector('.print-btn').addEventListener('click', function () {
+        var invalid = form.querySelector(':invalid');
+        if (invalid) {
+          line.status.textContent = 'Please check the highlighted field before printing.';
+          invalid.focus();
+          return;
+        }
+        line.status.textContent = '';
+        window.print();
+      });
+
+      form.addEventListener('reset', function (e) {
+        if (skipConfirm) return;
+        if (!confirm('Clear every answer on this form?')) { e.preventDefault(); return; }
+        setTimeout(function () { syncToggles(form); line.status.textContent = 'Form cleared.'; }, 0);
+      });
+
+      syncToggles(form);
+    }
+
+    Object.keys(LINES).forEach(function (key) {
+      var line = LINES[key];
+      line.form = document.querySelector('form.quote-form[data-line="' + key + '"]');
+      line.status = line.form.querySelector('.status');
+      line.columns = buildColumns(line.form);
+      line.rows = [];
+      line.editingIndex = null;
+      wireForm(line);
+    });
+
+    picker.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-line]');
+      if (b) selectLine(b.dataset.line);
     });
 
     document.getElementById('edit-btn').addEventListener('click', function () {
@@ -449,53 +814,40 @@
     });
 
     document.getElementById('new-btn').addEventListener('click', function () {
+      var line = LINES[current];
       skipConfirm = true;
-      form.reset();
+      line.form.reset();
       skipConfirm = false;
-      syncToggles();
-      editingIndex = null;
-      status.textContent = '';
+      syncToggles(line.form);
+      line.editingIndex = null;
+      line.status.textContent = '';
       showResults(false);
+      window.scrollTo(0, 0);
     });
 
     document.getElementById('download-btn').addEventListener('click', function () {
+      var line = LINES[current];
       function cell(v) {
         v = String(v == null ? '' : v);
         // Stop spreadsheet apps from treating an answer as a formula.
         if (/^[=+@\t\r-]/.test(v) && !/^-?\d/.test(v)) v = "'" + v;
         return '"' + v.replace(/"/g, '""') + '"';
       }
-      var lines = [columns.map(function (c) { return cell(c.label); }).join(',')];
-      rows.forEach(function (r) {
-        lines.push(columns.map(function (c) { return cell(r[c.key]); }).join(','));
+      var lines = [line.columns.map(function (c) { return cell(c.label); }).join(',')];
+      line.rows.forEach(function (r) {
+        lines.push(line.columns.map(function (c) { return cell(r[c.key]); }).join(','));
       });
-      var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'homeowners-quote-requests.csv';
+      a.download = line.file;
       document.body.appendChild(a);
       a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     });
 
-    document.getElementById('print-btn').addEventListener('click', function () {
-      var invalid = form.querySelector(':invalid');
-      if (invalid) {
-        status.textContent = 'Please check the highlighted field before printing.';
-        invalid.focus();
-        return;
-      }
-      status.textContent = '';
-      window.print();
-    });
-
-    form.addEventListener('reset', function (e) {
-      if (skipConfirm) return;
-      if (!confirm('Clear every answer on this form?')) { e.preventDefault(); return; }
-      setTimeout(function () { syncToggles(); status.textContent = 'Form cleared.'; }, 0);
-    });
-
-    syncToggles();
+    window.addEventListener('hashchange', function () { selectLine(location.hash.slice(1)); });
+    selectLine(location.hash.slice(1));
   })();
 </script>
 </body>
