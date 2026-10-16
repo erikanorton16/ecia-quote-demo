@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homeowners Quote Form</title>
+<meta name="description" content="Homeowners quote request information form (ECIA demo).">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1d2330;
+    --muted: #5b6475;
+    --line: #d5d9e0;
+    --accent: #1f4e8c;
+    --accent-soft: #e8eef7;
+    --note-bg: #fff8e1;
+    --note-line: #e6c65c;
+    --error: #b42318;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c;
+      --card: #1d2128;
+      --text: #e6e8ec;
+      --muted: #a2a9b6;
+      --line: #353b46;
+      --accent: #7fa8e0;
+      --accent-soft: #233046;
+      --note-bg: #2f2a17;
+      --note-line: #8a7426;
+      --error: #f2867c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  header h1 { margin: 0 0 4px; font-size: 1.75rem; }
+  header p { margin: 0 0 20px; color: var(--muted); }
+  .demo-note {
+    background: var(--note-bg);
+    border: 1px solid var(--note-line);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    font-size: .9rem;
+  }
+  fieldset {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    margin: 0 0 18px;
+    padding: 16px 18px 20px;
+    min-width: 0;
+  }
+  legend {
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 2px 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 6px;
+  }
+  .hint { color: var(--muted); font-size: .85rem; margin: 6px 0 12px; }
+  .grid { display: grid; gap: 12px 16px; grid-template-columns: repeat(12, 1fr); }
+  .field { display: flex; flex-direction: column; gap: 4px; grid-column: span 12; min-width: 0; }
+  .s3 { grid-column: span 3; } .s4 { grid-column: span 4; } .s6 { grid-column: span 6; } .s8 { grid-column: span 8; }
+  @media (max-width: 640px) {
+    .s3 { grid-column: span 6; } .s4, .s6, .s8 { grid-column: span 12; }
+  }
+  label { font-size: .9rem; font-weight: 600; }
+  input, select, textarea {
+    width: 100%;
+    font: inherit;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  input:user-invalid { border-color: var(--error); }
+  .subhead { grid-column: span 12; font-weight: 600; margin-top: 6px; }
+  .toggle { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 12px; }
+  .toggle input { width: auto; }
+  [hidden] { display: none !important; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  button {
+    font: inherit; font-weight: 600;
+    border-radius: 6px; padding: 10px 18px; cursor: pointer;
+    border: 1px solid var(--accent);
+  }
+  .primary { background: var(--accent); color: var(--card); }
+  .secondary { background: transparent; color: var(--accent); }
+  #status { margin-top: 12px; color: var(--muted); min-height: 1.5em; }
+
+  @media print {
+    :root { --bg: #fff; --card: #fff; --text: #000; --line: #999; --accent: #000; --accent-soft: #fff; }
+    body { font-size: 11pt; }
+    main { padding: 0; max-width: none; }
+    .demo-note, .actions, #status, .toggle { display: none; }
+    fieldset { break-inside: avoid; border-color: #999; padding: 8px 12px 10px; margin-bottom: 10px; }
+    legend { padding: 0 6px; }
+    input, select, textarea { border: none; border-bottom: 1px solid #999; border-radius: 0; padding: 2px 4px; }
+    textarea { min-height: 0; }
+    header p { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Homeowners Quote Form</h1>
+    <p>Fill in what you know. Fields can be left blank if they don't apply.</p>
+  </header>
+
+  <div class="demo-note" role="note">
+    <strong>Demo prototype.</strong> This page doesn't send your answers anywhere. They stay in your browser, and you can print or save them as a PDF. Please don't enter real Social Security numbers or other personal details here.
+  </div>
+
+  <form id="quote-form" novalidate>
+    <!-- Applicant -->
+    <fieldset>
+      <legend>Applicant Information</legend>
+      <div class="grid">
+        <div class="field s8"><label for="app_name">Name</label><input id="app_name" name="app_name" autocomplete="name"></div>
+        <div class="field s4"><label for="app_phone">Phone #</label><input id="app_phone" name="app_phone" type="tel" autocomplete="tel"></div>
+        <div class="field"><label for="app_email">Email address</label><input id="app_email" name="app_email" type="email" autocomplete="email"></div>
+        <div class="field s6"><label for="app_dob">Date of Birth</label><input id="app_dob" name="app_dob" type="date" autocomplete="bday"></div>
+        <div class="field s6"><label for="app_ssn">SS#</label><input id="app_ssn" name="app_ssn" inputmode="numeric" autocomplete="off" placeholder="###-##-####" pattern="\d{3}-?\d{2}-?\d{4}"></div>
+        <div class="field"><label for="app_occ">Occupation (job field &amp; specific job position)</label><input id="app_occ" name="app_occ" autocomplete="organization-title"></div>
+      </div>
+      <p class="hint">If retired, unemployed, or on disability, please state as such along with occupation prior to leaving the workforce.</p>
+      <div class="grid">
+        <div class="field"><label for="app_edu">Highest Level of Education</label><input id="app_edu" name="app_edu"></div>
+      </div>
+    </fieldset>
+
+    <!-- Co-applicant -->
+    <fieldset>
+      <legend>Co-Applicant Information (if applicable)</legend>
+      <label class="toggle"><input type="checkbox" id="has_coapp" data-reveals="coapp"> There is a co-applicant</label>
+      <div id="coapp" hidden>
+        <div class="grid">
+          <div class="field s8"><label for="co_name">Name</label><input id="co_name" name="co_name"></div>
+          <div class="field s4"><label for="co_phone">Phone #</label><input id="co_phone" name="co_phone" type="tel"></div>
+          <div class="field"><label for="co_email">Email address</label><input id="co_email" name="co_email" type="email"></div>
+          <div class="field s6"><label for="co_dob">Date of Birth</label><input id="co_dob" name="co_dob" type="date"></div>
+          <div class="field s6"><label for="co_ssn">SS#</label><input id="co_ssn" name="co_ssn" inputmode="numeric" autocomplete="off" placeholder="###-##-####" pattern="\d{3}-?\d{2}-?\d{4}"></div>
+          <div class="field"><label for="co_occ">Occupation (job field &amp; specific job position)</label><input id="co_occ" name="co_occ"></div>
+        </div>
+        <p class="hint">If retired, unemployed, or on disability, please state as such along with occupation prior to leaving the workforce.</p>
+        <div class="grid">
+          <div class="field"><label for="co_edu">Highest Level of Education</label><input id="co_edu" name="co_edu"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Insurance -->
+    <fieldset>
+      <legend>Current/Prior Insurance Information</legend>
+      <div class="grid">
+        <div class="field s6"><label for="ins_carrier">Current/Prior Carrier</label><input id="ins_carrier" name="ins_carrier"></div>
+        <div class="field s6"><label for="ins_howlong">How Long</label><input id="ins_howlong" name="ins_howlong" placeholder="e.g. 3 years"></div>
+        <div class="field s6"><label for="ins_exp">Exp/Renewal Date</label><input id="ins_exp" name="ins_exp" type="date"></div>
+        <div class="field s6"><label for="ins_premium">Premium ($)</label><input id="ins_premium" name="ins_premium" type="number" min="0" step="0.01" inputmode="decimal"></div>
+      </div>
+    </fieldset>
+
+    <!-- Dwelling -->
+    <fieldset>
+      <legend>Dwelling Information</legend>
+      <div class="grid">
+        <div class="field s6"><label for="dw_address">Address</label><input id="dw_address" name="dw_address" autocomplete="street-address"></div>
+        <div class="field s3"><label for="dw_city">City</label><input id="dw_city" name="dw_city" autocomplete="address-level2"></div>
+        <div class="field s3"><label for="dw_zip">ZIP</label><input id="dw_zip" name="dw_zip" inputmode="numeric" autocomplete="postal-code"></div>
+        <div class="field"><label for="dw_ext">Exterior Construction (ex: brick veneer)</label><input id="dw_ext" name="dw_ext"></div>
+      </div>
+      <p class="hint">If exterior is siding, please state what kind (ex: vinyl).</p>
+      <div class="grid">
+        <div class="field s8"><label for="dw_foundation">Foundation</label><input id="dw_foundation" name="dw_foundation"></div>
+        <div class="field s4"><label for="dw_roofage">Age of Roof (years)</label><input id="dw_roofage" name="dw_roofage" type="number" min="0"></div>
+        <div class="field s6">
+          <label for="dw_heat">Heating</label>
+          <select id="dw_heat" name="dw_heat"><option value=""></option><option>Electric</option><option>Gas</option><option>Propane</option><option>Other</option></select>
+        </div>
+        <div class="field s6"><label for="dw_air">Air</label><input id="dw_air" name="dw_air"></div>
+        <div class="field s6"><label for="dw_fireplaces">Fireplace(s)</label><input id="dw_fireplaces" name="dw_fireplaces" type="number" min="0"></div>
+        <div class="field s6">
+          <label for="dw_fpfuel">Fireplace Fuel</label>
+          <select id="dw_fpfuel" name="dw_fpfuel"><option value=""></option><option>Electric</option><option>Gas</option><option>Wood burning</option><option>N/A</option></select>
+        </div>
+        <div class="field s6"><label for="dw_fullbath"># of Full Bathrooms</label><input id="dw_fullbath" name="dw_fullbath" type="number" min="0"></div>
+        <div class="field s6"><label for="dw_halfbath"># of Half Bathrooms</label><input id="dw_halfbath" name="dw_halfbath" type="number" min="0"></div>
+        <div class="subhead">Most recent work (by year) done to plumbing, electricity, heat/air, and roof (part replacements to full renovations)</div>
+        <div class="field s3"><label for="up_roof">Roof</label><input id="up_roof" name="up_roof" placeholder="F - 2019"></div>
+        <div class="field s3"><label for="up_elec">Electricity</label><input id="up_elec" name="up_elec"></div>
+        <div class="field s3"><label for="up_hvac">Heat/Air</label><input id="up_hvac" name="up_hvac"></div>
+        <div class="field s3"><label for="up_plumb">Plumbing</label><input id="up_plumb" name="up_plumb"></div>
+      </div>
+      <p class="hint">If partial, enter "P - (year completed)". If full renovation, enter "F - (year completed)".</p>
+    </fieldset>
+
+    <!-- Security -->
+    <fieldset>
+      <legend>Security/Safety Features (if applicable)</legend>
+      <p class="hint">Documentation may be required.<br>
+        Example 1: burglar &amp; fire alarm, monitored by [company name], carbon monoxide detection, sprinkler system<br>
+        Example 2: home camera system and fire alarm, not monitored</p>
+      <div class="grid">
+        <div class="field"><textarea id="security" name="security" aria-label="Security and safety features"></textarea></div>
+      </div>
+    </fieldset>
+
+    <!-- Pool -->
+    <fieldset>
+      <legend>Pool (if applicable)</legend>
+      <label class="toggle"><input type="checkbox" id="has_pool" data-reveals="pool"> The property has a pool</label>
+      <div id="pool" hidden>
+        <div class="grid">
+          <div class="field s6">
+            <label for="pool_type">In-ground or Above-ground</label>
+            <select id="pool_type" name="pool_type"><option value=""></option><option>In-ground</option><option>Above-ground</option></select>
+          </div>
+          <div class="field s6">
+            <label for="pool_fenced">Fenced</label>
+            <select id="pool_fenced" name="pool_fenced"><option value=""></option><option>Yes</option><option>No</option></select>
+          </div>
+          <div class="field s4"><label for="pool_len">Length (ft)</label><input id="pool_len" name="pool_len" type="number" min="0" step="0.1"></div>
+          <div class="field s4"><label for="pool_wid">Width (ft)</label><input id="pool_wid" name="pool_wid" type="number" min="0" step="0.1"></div>
+          <div class="field s4"><label for="pool_gal">Gallons</label><input id="pool_gal" name="pool_gal" type="number" min="0"></div>
+          <div class="field s6"><label for="pool_deep">Deepest point (ft)</label><input id="pool_deep" name="pool_deep" type="number" min="0" step="0.1"></div>
+          <div class="field s6"><label for="pool_shallow">Shallowest point (ft)</label><input id="pool_shallow" name="pool_shallow" type="number" min="0" step="0.1"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Mortgage -->
+    <fieldset>
+      <legend>Mortgage/Additional Interest(s) (if applicable)</legend>
+      <div class="grid">
+        <div class="field"><label for="mtg_name">Mortgagee Name (as appears on loan agreement)</label><input id="mtg_name" name="mtg_name"></div>
+        <div class="field s6"><label for="mtg_address">Address</label><input id="mtg_address" name="mtg_address"></div>
+        <div class="field s3"><label for="mtg_city">City</label><input id="mtg_city" name="mtg_city"></div>
+        <div class="field s3"><label for="mtg_statezip">State &amp; ZIP</label><input id="mtg_statezip" name="mtg_statezip"></div>
+        <div class="field s6"><label for="mtg_loan">Loan #</label><input id="mtg_loan" name="mtg_loan" autocomplete="off"></div>
+        <div class="field s6">
+          <label for="mtg_escrow">Insurance escrowed</label>
+          <select id="mtg_escrow" name="mtg_escrow"><option value=""></option><option>Yes</option><option>No</option></select>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Additional -->
+    <fieldset>
+      <legend>Additional Buildings or Features</legend>
+      <p class="hint">Please describe here with dimensions and approximate value.</p>
+      <div class="grid">
+        <div class="field"><textarea id="additional" name="additional" aria-label="Additional buildings or features"></textarea></div>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button type="button" class="primary" id="print-btn">Print / Save as PDF</button>
+      <button type="reset" class="secondary">Clear form</button>
+    </div>
+    <p id="status" aria-live="polite"></p>
+  </form>
+</main>
+
+<script>
+  (function () {
+    var form = document.getElementById('quote-form');
+    var status = document.getElementById('status');
+
+    // Show/hide optional sections (co-applicant, pool).
+    function syncToggles() {
+      form.querySelectorAll('[data-reveals]').forEach(function (box) {
+        document.getElementById(box.dataset.reveals).hidden = !box.checked;
+      });
+    }
+    form.addEventListener('change', function (e) {
+      if (e.target.matches('[data-reveals]')) syncToggles();
+    });
+
+    document.getElementById('print-btn').addEventListener('click', function () {
+      var invalid = form.querySelector(':invalid');
+      if (invalid) {
+        status.textContent = 'Please check the highlighted field before printing.';
+        invalid.focus();
+        return;
+      }
+      status.textContent = '';
+      window.print();
+    });
+
+    form.addEventListener('reset', function (e) {
+      if (!confirm('Clear every answer on this form?')) { e.preventDefault(); return; }
+      setTimeout(function () { syncToggles(); status.textContent = 'Form cleared.'; }, 0);
+    });
+
+    syncToggles();
+  })();
+</script>
+</body>
+</html>
