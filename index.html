@@ -11,19 +11,16 @@
 <style>
   :root {
     /* Colors taken from eciaonline.com */
-    --bg: #f3f5f9;
+    --bg: #f6f7f9;
     --card: #ffffff;
-    --text: #22252f;
-    --muted: #5d6474;
-    --line: #d4dae5;
-    --accent: #3c6bb5;
+    --text: #3d424d;
+    --muted: #6b717d;
+    --line: #d9dde4;
+    --accent: #4a6fb3;
     --button: #4a7cc7;
     --button-text: #ffffff;
-    --accent-soft: #e9f0fa;
-    --navy: #1b1e2a;
-    --navy-text: #f2f4f8;
-    --navy-accent: #79a3e3;
-    --link: #a3355f;
+    --accent-soft: #edf2fa;
+    --link: #3d424d;
     --note-bg: #fff8e1;
     --note-line: #e6c65c;
     --error: #b42318;
@@ -44,21 +41,21 @@
   .topbar-inner { max-width: 860px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .brand { display: block; height: 60px; width: auto; }
   @media (max-width: 640px) { .brand { height: 48px; } }
-  .phone { font-weight: 600; font-size: .95rem; color: #3b3f4c; }
+  .phone { font-weight: 500; font-size: .95rem; color: var(--text); }
   .phone a { text-decoration: none; }
 
-  .hero { background: var(--navy); color: var(--navy-text); }
-  .hero-inner { max-width: 860px; margin: 0 auto; padding: 28px 16px 30px; }
-  .hero h1 { margin: 0 0 6px; font-size: 1.9rem; font-weight: 700; color: var(--navy-accent); }
-  .hero p { margin: 0; max-width: 620px; opacity: .92; }
+  .hero { background: var(--card); border-bottom: 1px solid var(--line); }
+  .hero-inner { max-width: 860px; margin: 0 auto; padding: 28px 16px 26px; }
+  .hero h1 { margin: 0 0 6px; font-size: 2rem; font-weight: 500; color: var(--accent); }
+  .hero p { margin: 0; max-width: 620px; color: var(--muted); }
 
   main { max-width: 860px; margin: 0 auto; padding: 24px 16px 40px; }
 
-  .site-foot { background: var(--navy); color: var(--navy-text); font-size: .85rem; }
+  .site-foot { background: var(--card); border-top: 1px solid var(--line); color: var(--text); font-size: .85rem; }
   .site-foot-inner { max-width: 860px; margin: 0 auto; padding: 20px 16px 28px; display: grid; gap: 6px; }
-  .site-foot strong { font-family: Montserrat, system-ui, sans-serif; }
-  .site-foot a { color: var(--navy-accent); }
-  .site-foot .credit { opacity: .75; margin-top: 6px; }
+  .site-foot strong { font-family: Montserrat, system-ui, sans-serif; font-weight: 500; font-size: 1.05rem; color: var(--accent); }
+  .site-foot a { text-decoration: none; }
+  .site-foot .credit { color: var(--muted); margin-top: 6px; }
   .demo-note {
     background: var(--note-bg);
     border: 1px solid var(--note-line);
