@@ -744,7 +744,7 @@
     </div>
     <p class="hint">Scroll sideways to see every column. Social Security numbers are partly hidden in this preview.</p>
     <div class="actions">
-      <button type="button" class="primary" id="download-btn">Download spreadsheet</button>
+      <button type="button" class="primary" id="download-btn">Download Excel spreadsheet</button>
     </div>
     <p class="pitch">In a live setup, this row would be added automatically to Google Sheets, Excel, or the agency's own system the moment the client hits Submit.</p>
     </div>
@@ -764,11 +764,11 @@
     // Each line of business has its own form, columns and rows.
     // Rows live only in this browser tab's memory; nothing is sent or stored.
     var LINES = {
-      home:     { title: 'Get a Home Quote',           sheet: 'Home quote requests',     file: 'ecia-home-quote-requests.csv' },
-      auto:     { title: 'Get an Auto Quote',          sheet: 'Auto quote requests',     file: 'ecia-auto-quote-requests.csv' },
-      life:     { title: 'Get a Life Insurance Quote', sheet: 'Life quote requests',     file: 'ecia-life-quote-requests.csv' },
-      business: { title: 'Get a Business Quote',       sheet: 'Business quote requests', file: 'ecia-business-quote-requests.csv' },
-      commercial: { title: 'Get a Commercial Quote',   sheet: 'Commercial quote requests', file: 'ecia-commercial-quote-requests.csv' }
+      home:     { title: 'Get a Home Quote',           sheet: 'Home quote requests',     file: 'ecia-home-quote-requests.xlsx' },
+      auto:     { title: 'Get an Auto Quote',          sheet: 'Auto quote requests',     file: 'ecia-auto-quote-requests.xlsx' },
+      life:     { title: 'Get a Life Insurance Quote', sheet: 'Life quote requests',     file: 'ecia-life-quote-requests.xlsx' },
+      business: { title: 'Get a Business Quote',       sheet: 'Business quote requests', file: 'ecia-business-quote-requests.xlsx' },
+      commercial: { title: 'Get a Commercial Quote',   sheet: 'Commercial quote requests', file: 'ecia-commercial-quote-requests.xlsx' }
     };
     var results = document.getElementById('results');
     var sheet = document.getElementById('sheet');
@@ -946,19 +946,134 @@
       window.scrollTo(0, 0);
     });
 
+    // ---- Excel (.xlsx) download ----
+    // An .xlsx file is a zip of a few XML files. This builds a one-sheet
+    // workbook by hand so the page needs no outside library.
+    var CRC_TABLE = (function () {
+      var t = [];
+      for (var n = 0; n < 256; n++) {
+        var c = n;
+        for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+        t[n] = c >>> 0;
+      }
+      return t;
+    })();
+
+    function crc32(bytes) {
+      var c = 0xFFFFFFFF;
+      for (var i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    // Uncompressed ("stored") zip archive.
+    function makeZip(files) {
+      var enc = new TextEncoder();
+      var parts = [], central = [], offset = 0;
+      function u16(v) { return [v & 0xFF, (v >>> 8) & 0xFF]; }
+      function u32(v) { return [v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]; }
+      files.forEach(function (f) {
+        var name = enc.encode(f.name);
+        var data = enc.encode(f.text);
+        var crc = crc32(data);
+        var common = [].concat(u16(20), u16(0x0800), u16(0), u16(0), u16(0x21),
+          u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0));
+        var local = new Uint8Array([].concat(u32(0x04034B50), common));
+        parts.push(local, name, data);
+        central.push(new Uint8Array([].concat(u32(0x02014B50), u16(20), common,
+          u16(0), u16(0), u16(0), u32(0), u32(offset))), name);
+        offset += local.length + name.length + data.length;
+      });
+      var centralSize = central.reduce(function (n, b) { return n + b.length; }, 0);
+      var end = new Uint8Array([].concat(u32(0x06054B50), u16(0), u16(0),
+        u16(files.length), u16(files.length), u32(centralSize), u32(offset), u16(0)));
+      return new Blob(parts.concat(central, [end]),
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    }
+
+    function xmlEscape(v) {
+      return String(v == null ? '' : v)
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function colName(i) {
+      var s = '';
+      for (i++; i > 0; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s;
+      return s;
+    }
+
+    function buildWorkbook(sheetName, header, rows) {
+      var all = [header].concat(rows);
+      var widths = header.map(function (_, c) {
+        var w = all.reduce(function (m, r) {
+          return Math.max(m, String(r[c] || '').split('\n')[0].length);
+        }, 8);
+        return Math.min(w + 2, 50);
+      });
+      var sheetRows = all.map(function (r, ri) {
+        return '<row r="' + (ri + 1) + '">' + r.map(function (v, ci) {
+          return '<c r="' + colName(ci) + (ri + 1) + '" t="inlineStr"' + (ri === 0 ? ' s="1"' : '') +
+            '><is><t xml:space="preserve">' + xmlEscape(v) + '</t></is></c>';
+        }).join('') + '</row>';
+      }).join('');
+      var NS = 'http://schemas.openxmlformats.org/';
+      return makeZip([
+        { name: '[Content_Types].xml', text:
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+          '<Types xmlns="' + NS + 'package/2006/content-types">' +
+          '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+          '<Default Extension="xml" ContentType="application/xml"/>' +
+          '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+          '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+          '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+          '</Types>' },
+        { name: '_rels/.rels', text:
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+          '<Relationships xmlns="' + NS + 'package/2006/relationships">' +
+          '<Relationship Id="rId1" Type="' + NS + 'officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+          '</Relationships>' },
+        { name: 'xl/workbook.xml', text:
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+          '<workbook xmlns="' + NS + 'spreadsheetml/2006/main" xmlns:r="' + NS + 'officeDocument/2006/relationships">' +
+          '<sheets><sheet name="' + xmlEscape(sheetName.slice(0, 31)) + '" sheetId="1" r:id="rId1"/></sheets>' +
+          '</workbook>' },
+        { name: 'xl/_rels/workbook.xml.rels', text:
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+          '<Relationships xmlns="' + NS + 'package/2006/relationships">' +
+          '<Relationship Id="rId1" Type="' + NS + 'officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
+          '<Relationship Id="rId2" Type="' + NS + 'officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+          '</Relationships>' },
+        { name: 'xl/styles.xml', text:
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+          '<styleSheet xmlns="' + NS + 'spreadsheetml/2006/main">' +
+          '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
+          '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+          '<fill><patternFill patternType="solid"><fgColor rgb="FFE9F0FA"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+          '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+          '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+          '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+          '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>' +
+          '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+          '</styleSheet>' },
+        { name: 'xl/worksheets/sheet1.xml', text:
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+          '<worksheet xmlns="' + NS + 'spreadsheetml/2006/main">' +
+          '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
+          '<cols>' + widths.map(function (w, i) {
+            return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>';
+          }).join('') + '</cols>' +
+          '<sheetData>' + sheetRows + '</sheetData>' +
+          '</worksheet>' }
+      ]);
+    }
+
     document.getElementById('download-btn').addEventListener('click', function () {
       var line = LINES[current];
-      function cell(v) {
-        v = String(v == null ? '' : v);
-        // Stop spreadsheet apps from treating an answer as a formula.
-        if (/^[=+@\t\r-]/.test(v) && !/^-?\d/.test(v)) v = "'" + v;
-        return '"' + v.replace(/"/g, '""') + '"';
-      }
-      var lines = [line.columns.map(function (c) { return cell(c.label); }).join(',')];
-      line.rows.forEach(function (r) {
-        lines.push(line.columns.map(function (c) { return cell(r[c.key]); }).join(','));
+      var header = line.columns.map(function (c) { return c.label; });
+      var rows = line.rows.map(function (r) {
+        return line.columns.map(function (c) { return r[c.key] || ''; });
       });
-      var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      var blob = buildWorkbook(line.sheet, header, rows);
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = line.file;
