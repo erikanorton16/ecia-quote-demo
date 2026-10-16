@@ -114,11 +114,11 @@
   .secondary { background: transparent; color: var(--accent); }
   .status { margin-top: 12px; color: var(--muted); min-height: 1.5em; }
 
-  .lines { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+  .lines { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
   .lines-label { font-family: Montserrat, system-ui, sans-serif; font-weight: 600; margin: 0 0 8px; }
   .lines button { background: var(--card); color: var(--accent); border: 1px solid var(--line); padding: 12px 8px; font-weight: 600; }
   .lines button[aria-pressed="true"] { background: var(--button); border-color: var(--button); color: var(--button-text); }
-  @media (max-width: 640px) { .lines { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { .lines { grid-template-columns: repeat(6, 1fr); } .lines button { grid-column: span 2; } .lines button:nth-child(n+4) { grid-column: span 3; } }
   .draft-note { background: var(--accent-soft); border-radius: var(--radius); padding: 10px 14px; margin: 0 0 18px; font-size: .9rem; }
   .checks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 16px; }
   @media (max-width: 640px) { .checks { grid-template-columns: 1fr; } }
@@ -182,6 +182,7 @@
     <button type="button" data-line="auto" aria-pressed="false">Auto</button>
     <button type="button" data-line="life" aria-pressed="false">Life</button>
     <button type="button" data-line="business" aria-pressed="false">Business</button>
+    <button type="button" data-line="commercial" aria-pressed="false">Commercial</button>
   </div>
 
   <!-- ================= HOME (from ECIA's PDF form) ================= -->
@@ -609,6 +610,107 @@
     <p class="status" aria-live="polite"></p>
   </form>
 
+  <!-- ================= COMMERCIAL (draft) ================= -->
+  <form class="quote-form" data-line="commercial" novalidate hidden>
+    <p class="draft-note"><strong>Draft questions.</strong> These are the questions agencies typically ask for this type of quote. ECIA's own form can be swapped in.</p>
+    <fieldset data-section="Business">
+      <legend>Business Information</legend>
+      <div class="grid">
+        <div class="field s8"><label for="c_name">Business name</label><input id="c_name" name="c_name" autocomplete="organization"></div>
+        <div class="field s4"><label for="c_years">Years in business</label><input id="c_years" name="c_years" type="number" min="0"></div>
+        <div class="field s6"><label for="c_contact">Contact name</label><input id="c_contact" name="c_contact" autocomplete="name"></div>
+        <div class="field s6"><label for="c_title">Title</label><input id="c_title" name="c_title"></div>
+        <div class="field s6"><label for="c_phone">Phone #</label><input id="c_phone" name="c_phone" type="tel" autocomplete="tel"></div>
+        <div class="field s6"><label for="c_email">Email address</label><input id="c_email" name="c_email" type="email" autocomplete="email"></div>
+        <div class="field s6"><label for="c_address">Mailing address</label><input id="c_address" name="c_address" autocomplete="street-address"></div>
+        <div class="field s3"><label for="c_city">City</label><input id="c_city" name="c_city" autocomplete="address-level2"></div>
+        <div class="field s3"><label for="c_zip">ZIP</label><input id="c_zip" name="c_zip" inputmode="numeric" autocomplete="postal-code"></div>
+        <div class="field"><label for="c_desc">What does the business do?</label><textarea id="c_desc" name="c_desc"></textarea></div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Coverage">
+      <legend>Coverage You're Interested In</legend>
+      <div class="grid">
+        <div class="field" data-group-label="Coverages">
+          <div class="group-label">Coverages</div>
+          <div class="checks">
+            <label><input type="checkbox" name="c_cov" value="Commercial property (buildings)"> Commercial property (buildings)</label>
+            <label><input type="checkbox" name="c_cov" value="Commercial auto / fleet"> Commercial auto / fleet</label>
+            <label><input type="checkbox" name="c_cov" value="Trucking (for-hire hauling)"> Trucking (for-hire hauling)</label>
+            <label><input type="checkbox" name="c_cov" value="Contractor's equipment / inland marine"> Contractor's equipment / inland marine</label>
+            <label><input type="checkbox" name="c_cov" value="Builder's risk"> Builder's risk</label>
+            <label><input type="checkbox" name="c_cov" value="Commercial umbrella"> Commercial umbrella</label>
+            <label><input type="checkbox" name="c_cov" value="Not sure, please recommend"> Not sure, please recommend</label>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Property">
+      <legend>Commercial Property (if applicable)</legend>
+      <label class="toggle"><input type="checkbox" data-reveals="comm-prop"> Insuring a building</label>
+      <div id="comm-prop" hidden>
+        <div class="grid">
+          <div class="field s6"><label for="c_p_address">Building address</label><input id="c_p_address" name="c_p_address"></div>
+          <div class="field s3"><label for="c_p_city">City</label><input id="c_p_city" name="c_p_city"></div>
+          <div class="field s3"><label for="c_p_zip">ZIP</label><input id="c_p_zip" name="c_p_zip" inputmode="numeric"></div>
+          <div class="field s6">
+          <label for="c_p_use">How the building is used</label>
+          <select id="c_p_use" name="c_p_use"><option value=""></option><option>Office</option><option>Retail</option><option>Restaurant</option><option>Warehouse</option><option>Manufacturing</option><option>Apartments / multi-family</option><option>Other</option></select>
+        </div>
+          <div class="field s6">
+          <label for="c_p_occ">Occupied by</label>
+          <select id="c_p_occ" name="c_p_occ"><option value=""></option><option>Owner</option><option>Tenants</option><option>Owner and tenants</option><option>Vacant</option></select>
+        </div>
+          <div class="field s4"><label for="c_p_built">Year built</label><input id="c_p_built" name="c_p_built" type="number" min="1800"></div>
+          <div class="field s4"><label for="c_p_sqft">Square footage</label><input id="c_p_sqft" name="c_p_sqft" type="number" min="0"></div>
+          <div class="field s4"><label for="c_p_stories">Stories</label><input id="c_p_stories" name="c_p_stories" type="number" min="1"></div>
+          <div class="field s6">
+          <label for="c_p_constr">Construction</label>
+          <select id="c_p_constr" name="c_p_constr"><option value=""></option><option>Wood frame</option><option>Masonry / brick</option><option>Metal building</option><option>Steel / concrete</option></select>
+        </div>
+          <div class="field s6"><label for="c_p_roof">Age of roof (years)</label><input id="c_p_roof" name="c_p_roof" type="number" min="0"></div>
+          <div class="field s6">
+          <label for="c_p_sprink">Sprinkler system</label>
+          <select id="c_p_sprink" name="c_p_sprink"><option value=""></option><option>Yes</option><option>No</option></select>
+        </div>
+          <div class="field s6"><label for="c_p_value">Building value ($)</label><input id="c_p_value" name="c_p_value" type="number" min="0" inputmode="decimal"></div>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Vehicles">
+      <legend>Commercial Vehicles (if applicable)</legend>
+      <label class="toggle"><input type="checkbox" data-reveals="comm-veh"> Insuring vehicles</label>
+      <div id="comm-veh" hidden>
+        <div class="grid">
+          <div class="field s4"><label for="c_v_count">Number of vehicles</label><input id="c_v_count" name="c_v_count" type="number" min="0"></div>
+          <div class="field s4"><label for="c_v_drivers">Number of drivers</label><input id="c_v_drivers" name="c_v_drivers" type="number" min="0"></div>
+          <div class="field s4">
+          <label for="c_v_radius">How far they travel</label>
+          <select id="c_v_radius" name="c_v_radius"><option value=""></option><option>Local (under 50 miles)</option><option>Regional (50-200 miles)</option><option>Long haul (200+ miles)</option></select>
+        </div>
+          <div class="field"><label for="c_v_list">Year, make, model and VIN of each vehicle</label><textarea id="c_v_list" name="c_v_list"></textarea></div>
+          <div class="field"><label for="c_v_cargo">What do you haul, if anything?</label><input id="c_v_cargo" name="c_v_cargo"></div>
+          <div class="field"><label for="c_v_history">Driver accidents or tickets in the last 3 years</label><textarea id="c_v_history" name="c_v_history"></textarea></div>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset data-section="Prior Insurance">
+      <legend>Current/Prior Insurance Information</legend>
+      <div class="grid">
+        <div class="field s6"><label for="c_carrier">Current/Prior Carrier</label><input id="c_carrier" name="c_carrier"></div>
+        <div class="field s6"><label for="c_exp">Exp/Renewal Date</label><input id="c_exp" name="c_exp" type="date"></div>
+        <div class="field s6"><label for="c_premium">Annual premium ($)</label><input id="c_premium" name="c_premium" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <div class="field"><label for="c_claims">Claims in the last 5 years</label><textarea id="c_claims" name="c_claims"></textarea></div>
+      </div>
+    </fieldset>
+    <div class="actions">
+      <button type="submit" class="primary">Submit</button>
+      <button type="button" class="secondary print-btn">Print / Save as PDF</button>
+      <button type="reset" class="secondary">Clear form</button>
+    </div>
+    <p class="status" aria-live="polite"></p>
+  </form>
+
   <section id="results" hidden aria-labelledby="results-title">
     <div class="done">
       <h2 id="results-title" tabindex="-1">Thanks, your quote request is in.</h2>
@@ -647,7 +749,8 @@
       home:     { title: 'Get a Home Quote',           sheet: 'Home quote requests',     file: 'ecia-home-quote-requests.csv' },
       auto:     { title: 'Get an Auto Quote',          sheet: 'Auto quote requests',     file: 'ecia-auto-quote-requests.csv' },
       life:     { title: 'Get a Life Insurance Quote', sheet: 'Life quote requests',     file: 'ecia-life-quote-requests.csv' },
-      business: { title: 'Get a Business Quote',       sheet: 'Business quote requests', file: 'ecia-business-quote-requests.csv' }
+      business: { title: 'Get a Business Quote',       sheet: 'Business quote requests', file: 'ecia-business-quote-requests.csv' },
+      commercial: { title: 'Get a Commercial Quote',   sheet: 'Commercial quote requests', file: 'ecia-commercial-quote-requests.csv' }
     };
     var results = document.getElementById('results');
     var sheet = document.getElementById('sheet');
